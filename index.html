@@ -898,7 +898,8 @@ var KEYS=[
   {id:"next",l:"AI berikutnya",d:"Alt+ArrowDown"},
   {id:"prev",l:"AI sebelumnya",d:"Alt+ArrowUp"},
   {id:"reload",l:"Muat ulang jendela AI",d:"Alt+KeyR"},
-  {id:"atur",l:"Buka/tutup pengaturan",d:"Alt+Comma"}
+  {id:"atur",l:"Buka/tutup pengaturan",d:"Alt+Comma"},
+  {id:"global",l:"Tampilkan/sembunyikan Menu AI (global, dari mana saja)",d:"Ctrl+Alt+KeyM"}
 ];
 var SCK="menuai.keys",recId=null;
 function defKeys(){var o={num:"Alt"};KEYS.forEach(function(k){o[k.id]=k.d});return o}
@@ -916,7 +917,18 @@ function cleanKeys(o){
 }
 var SC=defKeys();
 try{SC=cleanKeys(JSON.parse(localStorage.getItem(SCK)||"null"))}catch(e){}
-function saveKeys(){try{localStorage.setItem(SCK,JSON.stringify(SC))}catch(e){}}
+function saveKeys(){try{localStorage.setItem(SCK,JSON.stringify(SC))}catch(e){}syncDesktop()}
+// Kirim daftar pintasan ke main.js: supaya tetap jalan saat mengetik di jendela AI, dan untuk pintasan global.
+function syncDesktop(){
+  var D=window.menuaiDesktop;if(!D)return;
+  var combos=[],n;
+  KEYS.forEach(function(k){if(k.id!=="global"&&SC[k.id])combos.push(SC[k.id])});
+  if(SC.num)for(n=1;n<=9;n++)combos.push(SC.num+"+Digit"+n);
+  D.invoke("keys",{combos:combos}).catch(function(){});
+  D.invoke("gkey",{combo:SC.global||""}).then(function(r){
+    if(r&&r.ok===false)$("kmsg").textContent="Pintasan global tidak bisa dipasang"+(r.reason==="dipakai"?": kombinasi itu sedang dipakai aplikasi lain.":". Coba kombinasi lain.");
+  }).catch(function(){});
+}
 
 function comboOf(e){
   var c=e.code;
@@ -1008,23 +1020,33 @@ function runKey(id){
   else if(id==="prev")stepAI(-1);
   else if(id==="reload")$("reload").onclick();
 }
+// Mengerjakan satu kombinasi tombol. Mengembalikan true kalau kombinasi itu memang pintasan.
+function doCombo(c){
+  var i;
+  for(i=0;i<KEYS.length;i++){
+    if(SC[KEYS[i].id]&&SC[KEYS[i].id]===c){runKey(KEYS[i].id);return true}
+  }
+  var sc=splitCombo(c);
+  if(SC.num&&/^Digit[1-9]$/.test(sc.code)&&sc.mods===SC.num){
+    if(overlayOpen())return true;
+    var g=groupsOf()[parseInt(sc.code.slice(5),10)-1];
+    if(g)goGroup(g);
+    return true;
+  }
+  return false;
+}
 document.addEventListener("keydown",function(e){
   if(recId!==null){handleRecord(e);return}
   if(e.repeat)return;
   var c=comboOf(e);if(!c||!hasMod(c))return;
-  var i;
-  for(i=0;i<KEYS.length;i++){
-    if(SC[KEYS[i].id]&&SC[KEYS[i].id]===c){e.preventDefault();runKey(KEYS[i].id);return}
-  }
-  var sc=splitCombo(c);
-  if(SC.num&&/^Digit[1-9]$/.test(sc.code)&&sc.mods===SC.num){
-    e.preventDefault();
-    if(overlayOpen())return;
-    var g=groupsOf()[parseInt(sc.code.slice(5),10)-1];
-    if(g)goGroup(g);
-  }
+  if(doCombo(c))e.preventDefault();
 },true);
+// Tombol yang ditekan di dalam jendela AI dicegat main.js lalu diteruskan ke sini.
+if(window.menuaiDesktop&&window.menuaiDesktop.on){
+  window.menuaiDesktop.on("key",function(c){if(recId===null&&typeof c==="string")doCombo(c)});
+}
 renderKeys();
+syncDesktop();
 
 // ---- Cadangan data: ekspor dan impor ----
 $("exp").onclick=function(){
