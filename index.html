@@ -72,6 +72,15 @@ input[type=color]{width:64px;min-height:44px;height:44px;padding:4px;flex:none}
 .seg button.on{background:var(--acc);color:var(--bg);border-color:transparent}
 .note{margin:0;font-size:12px;color:var(--mute)}
 @media (min-width:700px){.sheet{align-items:center}.sheet>*{width:100%;max-width:640px}}
+/* Tata letak PC: navbar di kiri, halaman AI di kanan */
+body{flex-direction:row}
+.top{width:250px;flex:none;display:flex;flex-direction:column;padding:14px 12px;border-right:1px solid var(--line);overflow:hidden}
+.head{flex-wrap:wrap;gap:8px}
+h1{flex:1 0 100%;margin:0 0 4px;font-size:24px}
+.head .tool,.head .atur{flex:1;width:auto;height:40px;border-radius:12px;padding:0 8px}
+.chips{flex:1;min-height:0;flex-direction:column;overflow-x:hidden;overflow-y:auto;padding:12px 0 0}
+.chip{flex:none;width:100%;height:44px;text-align:left;border-radius:12px;padding:0 14px}
+#stage{flex:1;min-width:0;margin:0;border-top:0}
 </style>
 </head>
 <body>
@@ -85,7 +94,7 @@ input[type=color]{width:64px;min-height:44px;height:44px;padding:4px;flex:none}
   <div class="chips" id="chips"></div>
 </div>
 
-<div id="stage"><div class="hint" id="hint">Pilih AI di atas, jendelanya muncul di sini.</div></div>
+<div id="stage"><div class="hint" id="hint">Pilih AI di sebelah kiri, jendelanya muncul di sini.</div></div>
 
 <div class="sheet hide" id="sheet">
   <h2>Atur daftar AI</h2>
@@ -194,7 +203,7 @@ function safe(p){try{var r=p;if(r&&r.catch)r.catch(function(){})}catch(e){}}
 
 function showHint(t){
   var h=$("hint");
-  h.textContent=t||(list.length?"Pilih AI di atas, jendelanya muncul di sini.":"Daftar kosong. Tambah AI lewat tombol Atur.");
+  h.textContent=t||(list.length?"Pilih AI di sebelah kiri, jendelanya muncul di sini.":"Daftar kosong. Tambah AI lewat tombol Atur.");
   h.classList.remove("hide");
 }
 
@@ -219,13 +228,13 @@ function renderChips(){
     b.className="chip"+(act?" on":"");
     b.textContent=shown.n+(multi?" \u25BE":"");
     if(act)b.style.backgroundColor=shown.c;
-    b.onclick=multi?function(){openPop(g)}:function(){select(g[0])};
+    b.onclick=multi?function(){openPop(g,b)}:function(){select(g[0])};
     box.appendChild(b);
     if(act){setTimeout(function(){try{b.scrollIntoView({inline:"center",block:"nearest"})}catch(e){}},0)}
   });
 }
 
-function openPop(g){
+function openPop(g,chip){
   sheetOpen=true;hideAll();
   var box=$("poplist");box.innerHTML="";
   g.forEach(function(a){
@@ -238,8 +247,10 @@ function openPop(g){
     r.onclick=function(){$("pop").classList.add("hide");sheetOpen=false;select(a)};
     box.appendChild(r);
   });
-  $("popcard").style.top=(document.querySelector(".top").getBoundingClientRect().bottom+6)+"px";
   $("pop").classList.remove("hide");
+  var card=$("popcard"),cr=chip.getBoundingClientRect(),side=document.querySelector(".top").getBoundingClientRect();
+  card.style.left=(side.right+8)+"px";card.style.right="auto";card.style.width="280px";
+  card.style.top=Math.max(8,Math.min(cr.top,window.innerHeight-card.offsetHeight-12))+"px";
 }
 function closePop(){$("pop").classList.add("hide");resume()}
 $("pop").onclick=function(e){if(e.target===$("pop"))closePop()};
