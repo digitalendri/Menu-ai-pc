@@ -72,6 +72,12 @@ input[type=color]{width:64px;min-height:44px;height:44px;padding:4px;flex:none}
 .seg button.on{background:var(--acc);color:var(--bg);border-color:transparent}
 .note{margin:0;font-size:12px;color:var(--mute)}
 @media (min-width:700px){.sheet{align-items:center}.sheet>*{width:100%;max-width:640px}}
+
+/* Popup (kotak melayang) untuk kumpulan prompt */
+.modal{position:fixed;inset:0;z-index:25;background:rgba(0,0,0,.45);display:grid;place-items:center;padding:16px}
+.mcard{width:100%;max-width:520px;max-height:85vh;overflow-y:auto;background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:16px;box-shadow:0 12px 40px rgba(0,0,0,.4)}
+.mcard h2{margin:0 0 12px;font-size:20px}
+
 /* Tata letak PC: navbar di kiri, halaman AI di kanan */
 body{flex-direction:row}
 .top{width:250px;flex:none;display:flex;flex-direction:column;padding:14px 12px;border-right:1px solid var(--line);overflow:hidden}
@@ -140,7 +146,7 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
 
 <div class="pop hide" id="pop"><div class="popcard" id="popcard"><div class="poptitle">Pilih akun</div><div id="poplist"></div></div></div>
 
-<div class="sheet hide" id="psheet">
+<div class="modal hide" id="psheet"><div class="mcard">
   <h2>Kumpulan prompt</h2>
   <p class="note" style="margin-bottom:12px">Ketuk prompt untuk menyalinnya, lalu tempel di kolom chat AI.</p>
   <div id="plist"></div>
@@ -154,8 +160,8 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
       <button class="btn" id="psave">Tambah ke daftar</button>
     </div>
   </div>
-  <button class="btn ghost" id="pdone" style="margin-top:14px">Selesai</button>
-</div>
+  <button class="btn ghost" id="pdone" style="margin-top:14px">Tutup</button>
+</div></div>
 
 <script>
 // Skala koordinat jendela AI. Kalau posisinya meleset di HP, ubah jadi: var SCALE = window.devicePixelRatio;
@@ -565,6 +571,13 @@ function closePrompts(){
 }
 $("prm").onclick=openPrompts;
 $("pdone").onclick=closePrompts;
+// Popup: tutup dengan klik di area gelap luar kotak, atau tombol Esc.
+var pdown=false;
+$("psheet").onpointerdown=function(e){pdown=(e.target===$("psheet"))};
+$("psheet").onclick=function(e){if(pdown&&e.target===$("psheet"))closePrompts();pdown=false};
+document.addEventListener("keydown",function(e){
+  if(e.key==="Escape"&&!$("psheet").classList.contains("hide"))closePrompts();
+});
 $("pcancel").onclick=function(){pCancel();renderPrompts()};
 $("psave").onclick=function(){
   var t=$("pt").value.trim(),x=$("px").value.trim(),m=$("pmsg");
