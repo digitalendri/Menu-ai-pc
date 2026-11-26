@@ -1,0 +1,28 @@
+name: Build Windows
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Pasang dependensi
+        run: npm install
+
+      - name: Build installer
+        run: npm run dist
+
+      - name: Simpan installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: MenuAI-Setup
+          path: dist/MenuAI-Setup.exe
