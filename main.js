@@ -33,6 +33,8 @@ function createWindow() {
   win.on("close", (e) => {
     if (!quitting && trayOk) { e.preventDefault(); win.hide(); }
   });
+  // Windows sedang dimatikan, restart, atau logout: jangan tahan jendela di tray, biarkan benar-benar tertutup.
+  win.on("session-end", () => { quitting = true; });
   win.on("closed", () => { win = null; views.clear(); });
 }
 
