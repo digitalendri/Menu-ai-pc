@@ -25,4 +25,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: MenuAI-Setup
-          path: dist/MenuAI-Setup.exe
+          path: dist/MenuAI-Setup-*.exe

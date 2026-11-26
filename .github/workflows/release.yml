@@ -1,0 +1,48 @@
+name: Rilis Windows
+
+# Cara memakai: tab Actions > Rilis Windows > Run workflow > isi nomor versi baru (misalnya 1.1.1).
+# Workflow membuat installer lalu menerbitkan Release di GitHub. Aplikasi yang sudah terpasang
+# akan menemukan versi baru itu dan memperbarui dirinya.
+# Membuat tag berawalan v (misalnya v1.1.1) juga memicu rilis yang sama.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Nomor versi baru, misalnya 1.1.1 (tanpa huruf v)"
+        required: true
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Tentukan nomor versi
+        shell: bash
+        env:
+          INPUT_VERSION: ${{ github.event.inputs.version }}
+          EVENT_NAME: ${{ github.event_name }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then V="$INPUT_VERSION"; else V="$GITHUB_REF_NAME"; fi
+          V="${V#v}"
+          echo "Versi rilis: $V"
+          echo "$V" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$' || { echo "::error::Format versi harus angka.angka.angka, misalnya 1.1.1"; exit 1; }
+          npm version "$V" --no-git-tag-version --allow-same-version
+
+      - name: Pasang dependensi
+        run: npm install
+
+      - name: Build dan terbitkan rilis
+        run: npx electron-builder --win nsis --publish always
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
