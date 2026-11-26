@@ -82,8 +82,16 @@ input[type=color]{width:64px;min-height:44px;height:44px;padding:4px;flex:none}
 .pstat{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--acc);min-height:16px}
 #pside .sitem{padding:8px 12px}
 #pside .sitem.open{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc)}
-.pbody{margin:-2px 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:240px;overflow-y:auto;user-select:text;-webkit-user-select:text}
+#psearch{min-height:42px;margin-bottom:8px;padding:9px 12px}
+/* Daftar hanya menampilkan sekitar 5 prompt; sisanya tersembunyi di bawah dan muncul saat digulung */
+#plist{max-height:290px;overflow-y:auto;padding-right:2px;scrollbar-width:thin}
+#plist .srow{margin-bottom:8px}
+.pbody{margin:-2px 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.ptext{font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:170px;overflow-y:auto;user-select:text;-webkit-user-select:text}
+.pacts{display:flex;gap:8px;margin-top:10px}
+.pacts .act{flex:1;height:36px}
 #pside .act{padding:0 10px;font-size:13px}
+#padd{margin-top:10px;flex:none}
 #pside .form{margin-top:10px;padding:12px}
 #pside textarea{min-height:110px}
 body.bgimg .phead h2{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
@@ -122,14 +130,16 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
     <button class="pclose" id="pclose" aria-label="Tutup panel prompt">&#10005;</button>
   </div>
   <p class="pstat" id="pstat">Ketuk prompt untuk menyalinnya.</p>
+  <input type="search" id="psearch" placeholder="Cari prompt…" aria-label="Cari prompt" autocomplete="off">
   <div id="plist"></div>
-  <div class="form" id="pform">
+  <button class="btn" id="padd">+ Tambah prompt</button>
+  <div class="form hide" id="pform">
     <b id="pftitle">Tambah prompt</b>
     <input id="pt" placeholder="Judul, misalnya Ringkas teks" aria-label="Judul prompt">
     <textarea id="px" placeholder="Isi prompt" aria-label="Isi prompt"></textarea>
     <p class="msg" id="pmsg"></p>
     <div class="btns">
-      <button class="btn ghost hide" id="pcancel">Batal</button>
+      <button class="btn ghost" id="pcancel">Batal</button>
       <button class="btn" id="psave">Tambah ke daftar</button>
     </div>
   </div>
@@ -524,13 +534,22 @@ function copyText(s){
   return Promise.resolve(fallback());
 }
 
+var pFocusOpen=false;
 function renderPrompts(){
-  var box=$("plist");box.innerHTML="";
-  if(!plist.length){
-    var e=document.createElement("p");e.className="note";e.textContent="Belum ada prompt. Tambah yang pertama di bawah.";
+  var box=$("plist"),keep=box.scrollTop;box.innerHTML="";
+  var sr=$("psearch"),q=(sr.value||"").trim().toLowerCase();
+  sr.placeholder=plist.length?"Cari di "+plist.length+" prompt…":"Cari prompt…";
+  sr.classList.toggle("hide",!plist.length);
+  var shown=plist.filter(function(p){
+    return !q||p.t.toLowerCase().indexOf(q)>-1||p.x.toLowerCase().indexOf(q)>-1;
+  });
+  if(!plist.length||!shown.length){
+    var e=document.createElement("p");e.className="note";
+    e.textContent=plist.length?"Tidak ada prompt yang cocok.":"Belum ada prompt. Tambah yang pertama di bawah.";
     box.appendChild(e);
   }
-  plist.forEach(function(p){
+  var focusEl=null;
+  shown.forEach(function(p){
     var row=document.createElement("div");row.className="srow"+(pEdit===p.id?" editing":"");
     var isOpen=(pOpen===p.id);
     var it=document.createElement("div");it.className="sitem pitem"+(isOpen?" open":"");
@@ -542,30 +561,46 @@ function renderPrompts(){
     // Ketuk prompt: isinya terbuka (ketuk lagi untuk menutup) dan sekaligus tersalin.
     it.onclick=function(){
       pOpen=(pOpen===p.id)?null:p.id;
+      pFocusOpen=true;
       renderPrompts();
       copyText(p.x).then(function(ok){
         pnote(ok?"Tersalin: "+p.t+". Tempel di kolom chat.":"Gagal menyalin prompt.");
       });
     };
     row.appendChild(it);
-    var ed=document.createElement("button");ed.className="act edit";ed.textContent="Ubah";
-    ed.onclick=function(){pStartEdit(p)};
-    var x=document.createElement("button");x.className="act del";x.textContent="Hapus";
-    x.onclick=function(){pRemove(p)};
-    row.appendChild(ed);row.appendChild(x);
     box.appendChild(row);
     if(isOpen){
-      var bd=document.createElement("div");bd.className="pbody";bd.textContent=p.x;
+      var bd=document.createElement("div");bd.className="pbody";
+      var tx=document.createElement("div");tx.className="ptext";tx.textContent=p.x;
+      var ac=document.createElement("div");ac.className="pacts";
+      var ed=document.createElement("button");ed.className="act edit";ed.textContent="Ubah";
+      ed.onclick=function(){pStartEdit(p)};
+      var x=document.createElement("button");x.className="act del";x.textContent="Hapus";
+      x.onclick=function(){pRemove(p)};
+      ac.appendChild(ed);ac.appendChild(x);
+      bd.appendChild(tx);bd.appendChild(ac);
       box.appendChild(bd);
+      focusEl=bd;
     }
   });
+  box.scrollTop=keep; // posisi gulungan tidak melompat saat daftar digambar ulang
+  if(pFocusOpen&&focusEl){try{focusEl.scrollIntoView({block:"nearest"})}catch(e){}}
+  pFocusOpen=false;
 }
+function showPForm(){
+  $("pform").classList.remove("hide");$("padd").classList.add("hide");
+}
+$("padd").onclick=function(){
+  showPForm();
+  try{$("pform").scrollIntoView({behavior:"smooth",block:"nearest"});$("pt").focus()}catch(e){}
+};
+$("psearch").oninput=renderPrompts;
 function pStartEdit(p){
   pEdit=p.id;
   $("pt").value=p.t;$("px").value=p.x;$("pmsg").textContent="";
   $("pftitle").textContent="Ubah prompt";
   $("psave").textContent="Simpan perubahan";
-  $("pcancel").classList.remove("hide");
+  showPForm();
   renderPrompts();
   try{$("pform").scrollIntoView({behavior:"smooth",block:"center"})}catch(e){}
 }
@@ -574,7 +609,7 @@ function pCancel(){
   $("pt").value="";$("px").value="";$("pmsg").textContent="";
   $("pftitle").textContent="Tambah prompt";
   $("psave").textContent="Tambah ke daftar";
-  $("pcancel").classList.add("hide");
+  $("pform").classList.add("hide");$("padd").classList.remove("hide");
 }
 function pRemove(p){
   if(!confirm("Hapus prompt \""+p.t+"\"?"))return;
@@ -606,7 +641,9 @@ $("psave").onclick=function(){
     var p=pById(pEdit);
     if(p){p.t=t;p.x=x}
   }else{
-    plist.push({id:uid(),t:t,x:x});
+    var np={id:uid(),t:t,x:x};
+    plist.push(np);
+    $("psearch").value="";pOpen=np.id;pFocusOpen=true; // prompt baru langsung terbuka dan kelihatan
   }
   savePrompts();pCancel();renderPrompts();
 };
