@@ -85,8 +85,23 @@ input[type=color]{width:64px;min-height:44px;height:44px;padding:4px;flex:none}
 #psearch{min-height:42px;margin-bottom:8px;padding:9px 12px}
 /* Daftar hanya menampilkan sekitar 5 prompt; sisanya tersembunyi di bawah dan muncul saat digulung */
 #plist{max-height:290px;overflow-y:auto;padding-right:2px;scrollbar-width:thin}
-#plist .srow{margin-bottom:8px}
-.pbody{margin:-2px 0 8px;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.pwrap{margin-bottom:8px}
+#plist .srow{margin-bottom:0}
+.pbody{margin:6px 0 0;padding:10px 12px;background:var(--panel);border:1px solid var(--line);border-radius:12px}
+.pcat{font-size:12px;color:var(--mute);margin-bottom:6px}
+.pfil{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;scrollbar-width:none}
+.pfil::-webkit-scrollbar{display:none}
+.pf{flex:none;height:30px;padding:0 12px;border-radius:15px;border:1px solid var(--line);background:var(--panel);color:var(--ink);font:inherit;font-size:13px;font-weight:600}
+.pf.on{background:var(--acc);color:var(--bg);border-color:transparent}
+.pgrip{flex:none;width:30px;border:1px solid var(--line);background:var(--panel);border-radius:14px;color:var(--mute);display:grid;place-items:center;font-size:20px;line-height:1;touch-action:none;user-select:none;-webkit-user-select:none;cursor:grab}
+.pwrap.drag .sitem,.pwrap.drag .pgrip{border-color:var(--acc);box-shadow:0 6px 16px rgba(0,0,0,.25)}
+.pwrap.drag{opacity:.92}
+.star{flex:none;margin-left:auto;border:0;background:transparent;color:var(--mute);font-size:18px;line-height:1;padding:4px;cursor:pointer}
+.star.on{color:#e8a200}
+.krow{display:flex;align-items:center;gap:8px}
+.krow span{flex:1;font-size:14px}
+.kbtn{flex:none;min-width:120px;height:36px;border-radius:10px;border:1px solid var(--line);background:var(--bg);color:var(--ink);font:inherit;font-size:13px;font-weight:700;padding:0 10px}
+.kbtn.rec{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc);color:var(--acc)}
 .ptext{font-size:13px;line-height:1.45;white-space:pre-wrap;word-break:break-word;max-height:170px;overflow-y:auto;user-select:text;-webkit-user-select:text}
 .pacts{display:flex;gap:8px;margin-top:10px}
 .pacts .act{flex:1;height:36px}
@@ -99,8 +114,22 @@ body.bgimg .phead h2{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
 /* Tata letak PC: navbar di kiri, halaman AI di kanan */
 body{flex-direction:row}
 .top{width:250px;flex:none;display:flex;flex-direction:column;padding:14px 12px;border-right:1px solid var(--line);overflow:hidden}
-.head{flex-wrap:wrap;gap:8px}
-h1{flex:1 0 100%;margin:0 0 14px;font-size:24px}
+.head{flex-wrap:wrap;gap:0}
+h1{flex:1 1 0;min-width:0;margin:0;font-size:24px}
+.brow{flex:1 0 100%;display:flex;gap:8px;margin-top:14px}
+.fold{margin-left:8px}
+.ic{display:none}
+/* Menu kiri dilipat: hanya tombol kecil dan huruf awal tiap AI */
+body.fold .top{width:64px;padding:14px 8px}
+body.fold h1{display:none}
+body.fold .head{justify-content:center}
+body.fold .fold{margin-left:0}
+body.fold .brow{flex-direction:column;align-items:center;margin-top:10px}
+body.fold .head .atur{flex:none;width:36px;padding:0}
+body.fold .lbl{display:none}
+body.fold .ic{display:inline}
+body.fold .chip{font-size:0;padding:0;text-align:center}
+body.fold .chip::before{content:attr(data-i);font-size:16px}
 .head .tool{flex:none;width:36px;height:36px;border-radius:10px;padding:0;font-size:17px}
 .head .atur{flex:1;width:auto;height:36px;border-radius:10px;padding:0 8px;font-size:14px}
 #atur{font-size:20px;color:var(--acc)}
@@ -117,9 +146,12 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
 <div class="top">
   <div class="head">
     <h1>Menu AI</h1>
-    <button class="tool" id="reload" aria-label="Muat ulang" title="Muat ulang">&#8635;</button>
-    <button class="atur" id="prm">Prompt</button>
-    <button class="tool" id="atur" aria-label="Atur" title="Atur">&#9881;&#65038;</button>
+    <button class="tool fold" id="fold" aria-label="Lipat menu" title="Lipat menu">&#171;</button>
+    <div class="brow">
+      <button class="tool" id="reload" aria-label="Muat ulang" title="Muat ulang">&#8635;</button>
+      <button class="atur" id="prm" title="Prompt"><span class="ic">&#9998;</span><span class="lbl">Prompt</span></button>
+      <button class="tool" id="atur" aria-label="Atur" title="Atur">&#9881;&#65038;</button>
+    </div>
   </div>
   <div class="chips" id="chips"></div>
 </div>
@@ -133,11 +165,14 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
   </div>
   <p class="pstat" id="pstat">Ketuk prompt untuk menyalinnya.</p>
   <input type="search" id="psearch" placeholder="Cari prompt…" aria-label="Cari prompt" autocomplete="off">
+  <div class="pfil hide" id="pfil"></div>
   <div id="plist"></div>
   <button class="btn" id="padd">+ Tambah prompt</button>
   <div class="form hide" id="pform">
     <b id="pftitle">Tambah prompt</b>
     <input id="pt" placeholder="Judul, misalnya Ringkas teks" aria-label="Judul prompt">
+    <input id="pk" list="pkl" maxlength="24" placeholder="Kategori (opsional), misalnya Kerja" aria-label="Kategori prompt" autocomplete="off">
+    <datalist id="pkl"></datalist>
     <textarea id="px" placeholder="Isi prompt" aria-label="Isi prompt"></textarea>
     <p class="msg" id="pmsg"></p>
     <div class="btns">
@@ -181,6 +216,22 @@ body.bgimg h1,body.bgimg .hint{color:#fff;text-shadow:0 1px 5px rgba(0,0,0,.65)}
       <button data-t="dark">Gelap</button>
     </div>
     <p class="note">Mengatur tampilan menu di atas. Tema tiap situs AI diatur di pengaturan situsnya sendiri.</p>
+  </div>
+  <div class="form">
+    <b>Pintasan keyboard</b>
+    <div id="klist" style="display:grid;gap:8px"></div>
+    <p class="msg" id="kmsg"></p>
+    <button class="btn ghost" id="kreset" type="button">Kembalikan pintasan ke bawaan</button>
+    <p class="note">Klik tombol pintasan, lalu tekan kombinasi barunya (wajib memakai Ctrl, Alt, atau Meta). Esc untuk batal, Backspace untuk mengosongkan. Pintasan bekerja saat fokus ada di menu aplikasi, belum saat kamu sedang mengetik di jendela AI.</p>
+  </div>
+  <div class="form">
+    <b>Cadangan data</b>
+    <div class="btns">
+      <button class="btn ghost" id="exp" type="button">Ekspor data</button>
+      <button class="btn ghost" id="imp" type="button">Impor data</button>
+    </div>
+    <input type="file" id="impf" accept="application/json,.json" class="hide">
+    <p class="note">Menyimpan daftar AI, prompt, tampilan, tema, dan pintasan ke satu file .json. Impor akan menggantikan data yang ada sekarang.</p>
   </div>
   <button class="btn warn" id="reset" style="margin-top:14px">Kembalikan daftar bawaan</button>
   <button class="btn ghost" id="done" style="margin-top:8px">Selesai</button>
@@ -271,6 +322,7 @@ function renderChips(){
     var b=document.createElement("button");
     b.className="chip"+(act?" on":"");
     b.textContent=shown.n+(multi?" \u25BE":"");
+    b.setAttribute("data-i",shown.n.charAt(0).toUpperCase()+shown.n.charAt(1).toLowerCase());b.title=shown.n;
     if(act)b.style.backgroundColor=shown.c;
     b.onclick=multi?function(){openPop(g,b)}:function(){select(g[0])};
     box.appendChild(b);
@@ -463,7 +515,7 @@ function openSheet(){
   sheetOpen=true;hideAll();renderSheet();$("sheet").classList.remove("hide");
 }
 function closeSheet(){
-  cancelEdit();$("sheet").classList.add("hide");
+  cancelEdit();stopRec();$("sheet").classList.add("hide");
   resume();
 }
 // Kembali ke jendela AI yang aktif setelah lembar Atur/Prompt ditutup.
@@ -509,9 +561,15 @@ $("reset").onclick=function(){
 
 // ---- Prompt ----
 var PKEY="menuai.prompts",plist=[],pEdit=null,pOpen=null,toastTimer=null;
+// f = favorit, k = kategori (opsional)
+function cleanPrompts(a){
+  return a.filter(function(p){return p&&typeof p.t==="string"&&typeof p.x==="string"}).map(function(p){
+    return {id:(typeof p.id==="string"&&p.id)?p.id:uid(),t:p.t,x:p.x,f:!!p.f,k:typeof p.k==="string"?p.k.slice(0,24):""};
+  });
+}
 try{
   var pl=JSON.parse(localStorage.getItem(PKEY)||"[]");
-  if(Array.isArray(pl))plist=pl.filter(function(p){return p&&typeof p.t==="string"&&typeof p.x==="string"}).map(function(p){return {id:p.id||uid(),t:p.t,x:p.x}});
+  if(Array.isArray(pl))plist=cleanPrompts(pl);
 }catch(e){}
 function savePrompts(){try{localStorage.setItem(PKEY,JSON.stringify(plist))}catch(e){}}
 function pById(id){return plist.filter(function(p){return p.id===id})[0]}
@@ -537,15 +595,44 @@ function copyText(s){
   return Promise.resolve(fallback());
 }
 
-var pFocusOpen=false;
+var pFocusOpen=false,pFilter="all";
+function pCats(){
+  var seen={},out=[];
+  plist.forEach(function(p){if(p.k&&!seen[p.k]){seen[p.k]=1;out.push(p.k)}});
+  return out;
+}
+function renderFilters(){
+  var box=$("pfil"),keepX=box.scrollLeft,cats=pCats(),nfav=plist.filter(function(p){return p.f}).length;
+  // Filter yang sudah tidak ada (favorit/kategori habis) kembali ke Semua.
+  if(pFilter==="fav"&&!nfav)pFilter="all";
+  if(pFilter.indexOf("k:")===0&&cats.indexOf(pFilter.slice(2))<0)pFilter="all";
+  box.innerHTML="";
+  box.classList.toggle("hide",!(nfav||cats.length));
+  function chip(label,val){
+    var b=document.createElement("button");b.className="pf"+(pFilter===val?" on":"");b.textContent=label;
+    b.onclick=function(){pFilter=val;renderPrompts()};
+    box.appendChild(b);
+  }
+  chip("Semua","all");
+  if(nfav)chip("\u2605 Favorit","fav");
+  cats.forEach(function(c){chip(c,"k:"+c)});
+  box.scrollLeft=keepX;
+  var dl=$("pkl");dl.innerHTML="";
+  cats.forEach(function(c){var o=document.createElement("option");o.value=c;dl.appendChild(o)});
+}
 function renderPrompts(){
   var box=$("plist"),keep=box.scrollTop;box.innerHTML="";
+  renderFilters();
   var sr=$("psearch"),q=(sr.value||"").trim().toLowerCase();
-  sr.placeholder=plist.length?"Cari di "+plist.length+" prompt…":"Cari prompt…";
+  sr.placeholder=plist.length?"Cari di "+plist.length+" prompt\u2026":"Cari prompt\u2026";
   sr.classList.toggle("hide",!plist.length);
   var shown=plist.filter(function(p){
-    return !q||p.t.toLowerCase().indexOf(q)>-1||p.x.toLowerCase().indexOf(q)>-1;
+    if(pFilter==="fav"&&!p.f)return false;
+    if(pFilter.indexOf("k:")===0&&p.k!==pFilter.slice(2))return false;
+    return !q||p.t.toLowerCase().indexOf(q)>-1||p.x.toLowerCase().indexOf(q)>-1||p.k.toLowerCase().indexOf(q)>-1;
   });
+  // Urutan hanya bisa digeser saat semua prompt tampil (tanpa filter dan tanpa pencarian).
+  var canDrag=(pFilter==="all"&&!q);
   if(!plist.length||!shown.length){
     var e=document.createElement("p");e.className="note";
     e.textContent=plist.length?"Tidak ada prompt yang cocok.":"Belum ada prompt. Tambah yang pertama di bawah.";
@@ -553,14 +640,25 @@ function renderPrompts(){
   }
   var focusEl=null;
   shown.forEach(function(p){
+    var wrap=document.createElement("div");wrap.className="pwrap";wrap.setAttribute("data-id",p.id);
     var row=document.createElement("div");row.className="srow"+(pEdit===p.id?" editing":"");
+    if(canDrag){
+      var gp=document.createElement("div");gp.className="pgrip";gp.innerHTML="&#8801;";
+      gp.setAttribute("role","button");gp.setAttribute("aria-label","Geser untuk mengubah urutan "+p.t);
+      gp.onpointerdown=startPDrag;
+      row.appendChild(gp);
+    }
     var isOpen=(pOpen===p.id);
     var it=document.createElement("div");it.className="sitem pitem"+(isOpen?" open":"");
     it.setAttribute("role","button");it.setAttribute("aria-expanded",isOpen?"true":"false");
-    var t=document.createElement("div");t.style.minWidth="0";
+    var t=document.createElement("div");t.style.minWidth="0";t.style.flex="1";
     var nm=document.createElement("div");nm.className="sname";nm.textContent=p.t;
-    var pv=document.createElement("div");pv.className="surl";pv.textContent=p.x.replace(/\s+/g," ");
+    var pv=document.createElement("div");pv.className="surl";pv.textContent=(p.k?p.k+" \u00B7 ":"")+p.x.replace(/\s+/g," ");
     t.appendChild(nm);if(!isOpen)t.appendChild(pv);it.appendChild(t);
+    var st=document.createElement("button");st.className="star"+(p.f?" on":"");
+    st.textContent=p.f?"\u2605":"\u2606";st.title=p.f?"Hapus dari favorit":"Jadikan favorit";st.setAttribute("aria-label",st.title);
+    st.onclick=function(ev){ev.stopPropagation();p.f=!p.f;savePrompts();renderPrompts()};
+    it.appendChild(st);
     // Ketuk prompt: isinya terbuka (ketuk lagi untuk menutup) dan sekaligus tersalin.
     it.onclick=function(){
       pOpen=(pOpen===p.id)?null:p.id;
@@ -571,9 +669,10 @@ function renderPrompts(){
       });
     };
     row.appendChild(it);
-    box.appendChild(row);
+    wrap.appendChild(row);
     if(isOpen){
       var bd=document.createElement("div");bd.className="pbody";
+      if(p.k){var ct=document.createElement("div");ct.className="pcat";ct.textContent="Kategori: "+p.k;bd.appendChild(ct)}
       var tx=document.createElement("div");tx.className="ptext";tx.textContent=p.x;
       var ac=document.createElement("div");ac.className="pacts";
       var ed=document.createElement("button");ed.className="act edit";ed.textContent="Ubah";
@@ -582,13 +681,62 @@ function renderPrompts(){
       x.onclick=function(){pRemove(p)};
       ac.appendChild(ed);ac.appendChild(x);
       bd.appendChild(tx);bd.appendChild(ac);
-      box.appendChild(bd);
+      wrap.appendChild(bd);
       focusEl=bd;
     }
+    box.appendChild(wrap);
   });
   box.scrollTop=keep; // posisi gulungan tidak melompat saat daftar digambar ulang
   if(pFocusOpen&&focusEl){try{focusEl.scrollIntoView({block:"nearest"})}catch(e){}}
   pFocusOpen=false;
+}
+
+// Geser urutan prompt: tahan tombol \u2261, seret ke atas/bawah, lepas untuk menyimpan.
+function startPDrag(e){
+  if(e.button!==undefined&&e.button!==0)return;
+  e.preventDefault();
+  var wrap=e.currentTarget.parentNode.parentNode,box=$("plist");
+  var pid=e.pointerId,y=e.clientY,timer=null,done=false;
+  wrap.classList.add("drag");
+  box.style.userSelect=box.style.webkitUserSelect="none";
+  function wraps(){return Array.prototype.slice.call(box.querySelectorAll(".pwrap"))}
+  function place(){
+    var all=wraps(),cur=all.indexOf(wrap),idx=0,i;
+    for(i=0;i<all.length;i++){
+      if(all[i]===wrap)continue;
+      var b=all[i].getBoundingClientRect();
+      if(y>b.top+b.height/2)idx++;
+    }
+    if(idx<cur){for(i=cur-1;i>=idx;i--)box.insertBefore(all[i],wrap.nextSibling)}
+    else if(idx>cur){for(i=cur+1;i<=idx;i++)box.insertBefore(all[i],wrap)}
+  }
+  function move(ev){
+    if(ev.pointerId!==pid)return;
+    if(ev.pointerType==="mouse"&&ev.buttons===0){end(ev);return}
+    y=ev.clientY;place();
+  }
+  function end(ev){
+    if(done||(ev&&ev.pointerId!==undefined&&ev.pointerId!==pid))return;
+    done=true;clearInterval(timer);
+    window.removeEventListener("pointermove",move);
+    window.removeEventListener("pointerup",end);
+    window.removeEventListener("pointercancel",end);
+    box.style.userSelect=box.style.webkitUserSelect="";
+    wrap.classList.remove("drag");
+    var order=wraps().map(function(w){return w.getAttribute("data-id")});
+    var next=order.map(pById).filter(Boolean);
+    if(next.length===plist.length){plist=next;savePrompts()}
+    renderPrompts();
+  }
+  window.addEventListener("pointermove",move);
+  window.addEventListener("pointerup",end);
+  window.addEventListener("pointercancel",end);
+  // Gulung otomatis saat jari/kursor dekat tepi atas atau bawah daftar.
+  timer=setInterval(function(){
+    var r=box.getBoundingClientRect(),before=box.scrollTop;
+    if(y<r.top+40)box.scrollTop-=8;else if(y>r.bottom-40)box.scrollTop+=8;
+    if(box.scrollTop!==before)place();
+  },16);
 }
 function showPForm(){
   $("pform").classList.remove("hide");$("padd").classList.add("hide");
@@ -600,7 +748,7 @@ $("padd").onclick=function(){
 $("psearch").oninput=renderPrompts;
 function pStartEdit(p){
   pEdit=p.id;
-  $("pt").value=p.t;$("px").value=p.x;$("pmsg").textContent="";
+  $("pt").value=p.t;$("px").value=p.x;$("pk").value=p.k||"";$("pmsg").textContent="";
   $("pftitle").textContent="Ubah prompt";
   $("psave").textContent="Simpan perubahan";
   showPForm();
@@ -609,7 +757,7 @@ function pStartEdit(p){
 }
 function pCancel(){
   pEdit=null;
-  $("pt").value="";$("px").value="";$("pmsg").textContent="";
+  $("pt").value="";$("px").value="";$("pk").value="";$("pmsg").textContent="";
   $("pftitle").textContent="Tambah prompt";
   $("psave").textContent="Tambah ke daftar";
   $("pform").classList.add("hide");$("padd").classList.remove("hide");
@@ -637,16 +785,16 @@ $("prm").onclick=function(){setPSide($("pside").classList.contains("hide"))};
 $("pclose").onclick=function(){setPSide(false)};
 $("pcancel").onclick=function(){pCancel();renderPrompts()};
 $("psave").onclick=function(){
-  var t=$("pt").value.trim(),x=$("px").value.trim(),m=$("pmsg");
+  var t=$("pt").value.trim(),x=$("px").value.trim(),k=$("pk").value.trim().slice(0,24),m=$("pmsg");
   if(!x){m.textContent="Isi prompt-nya dulu.";return}
   if(!t)t=x.replace(/\s+/g," ").slice(0,28);
   if(pEdit){
     var p=pById(pEdit);
-    if(p){p.t=t;p.x=x}
+    if(p){p.t=t;p.x=x;p.k=k}
   }else{
-    var np={id:uid(),t:t,x:x};
+    var np={id:uid(),t:t,x:x,f:false,k:k};
     plist.push(np);
-    $("psearch").value="";pOpen=np.id;pFocusOpen=true; // prompt baru langsung terbuka dan kelihatan
+    $("psearch").value="";pFilter="all";pOpen=np.id;pFocusOpen=true; // prompt baru langsung terbuka dan kelihatan
   }
   savePrompts();pCancel();renderPrompts();
 };
@@ -729,6 +877,210 @@ function setTheme(t){try{localStorage.setItem(THEME_KEY,t)}catch(e){}applyTheme(
 })();
 var savedTheme="auto";try{savedTheme=localStorage.getItem(THEME_KEY)||"auto"}catch(e){}
 applyTheme(savedTheme);
+
+// ---- Menu kiri bisa dilipat ----
+var FOLD="menuai.fold";
+function setFold(on){
+  document.body.classList.toggle("fold",on);
+  var b=$("fold");b.textContent=on?"\u00BB":"\u00AB";b.title=on?"Buka menu":"Lipat menu";b.setAttribute("aria-label",b.title);
+  try{localStorage.setItem(FOLD,on?"1":"0")}catch(e){}
+}
+$("fold").onclick=function(){setFold(!document.body.classList.contains("fold"))};
+var foldOn=false;try{foldOn=localStorage.getItem(FOLD)==="1"}catch(e){}
+setFold(foldOn);
+
+// ---- Pintasan keyboard (bisa diatur sendiri) ----
+// Disimpan sebagai kode tombol, misalnya "Alt+KeyP". num = modifier untuk tombol angka 1-9.
+var KEYS=[
+  {id:"prompt",l:"Buka/tutup panel prompt",d:"Alt+KeyP"},
+  {id:"search",l:"Cari prompt",d:"Alt+KeyF"},
+  {id:"fold",l:"Lipat/buka menu kiri",d:"Alt+KeyB"},
+  {id:"next",l:"AI berikutnya",d:"Alt+ArrowDown"},
+  {id:"prev",l:"AI sebelumnya",d:"Alt+ArrowUp"},
+  {id:"reload",l:"Muat ulang jendela AI",d:"Alt+KeyR"},
+  {id:"atur",l:"Buka/tutup pengaturan",d:"Alt+Comma"}
+];
+var SCK="menuai.keys",recId=null;
+function defKeys(){var o={num:"Alt"};KEYS.forEach(function(k){o[k.id]=k.d});return o}
+function cleanKeys(o){
+  var r=defKeys();
+  if(!o||typeof o!=="object")return r;
+  KEYS.forEach(function(k){
+    var v=o[k.id];
+    if(v==="")r[k.id]="";
+    else if(typeof v==="string"&&/^((Ctrl|Alt|Shift|Meta)\+)*[A-Za-z0-9]+$/.test(v))r[k.id]=v;
+  });
+  if(o.num==="")r.num="";
+  else if(typeof o.num==="string"&&/^(Ctrl|Alt|Shift|Meta)(\+(Ctrl|Alt|Shift|Meta))*$/.test(o.num))r.num=o.num;
+  return r;
+}
+var SC=defKeys();
+try{SC=cleanKeys(JSON.parse(localStorage.getItem(SCK)||"null"))}catch(e){}
+function saveKeys(){try{localStorage.setItem(SCK,JSON.stringify(SC))}catch(e){}}
+
+function comboOf(e){
+  var c=e.code;
+  if(!c||c==="Unidentified"||c==="AltGraph"||/^(Control|Shift|Alt|Meta|OS)(Left|Right)$/.test(c))return null;
+  var p=[];
+  if(e.ctrlKey)p.push("Ctrl");if(e.altKey)p.push("Alt");if(e.shiftKey)p.push("Shift");if(e.metaKey)p.push("Meta");
+  p.push(c);return p.join("+");
+}
+function hasMod(c){return /(^|\+)(Ctrl|Alt|Meta)(\+|$)/.test(c)}
+var KN={Comma:",",Period:".",Slash:"/",Backslash:"\\",Semicolon:";",Quote:"'",Minus:"-",Equal:"=",BracketLeft:"[",BracketRight:"]",Backquote:"`",ArrowUp:"\u2191",ArrowDown:"\u2193",ArrowLeft:"\u2190",ArrowRight:"\u2192"};
+function prettyKey(code){return KN[code]||code.replace(/^Key/,"").replace(/^Digit/,"")}
+function pretty(c){return c.split("+").map(function(x){return /^(Ctrl|Alt|Shift|Meta)$/.test(x)?x:prettyKey(x)}).join(" + ")}
+function splitCombo(c){var p=c.split("+"),code=p.pop();return {mods:p.join("+"),code:code}}
+
+function renderKeys(){
+  var box=$("klist");box.innerHTML="";
+  function row(id,label,text){
+    var r=document.createElement("div");r.className="krow";
+    var sp=document.createElement("span");sp.textContent=label;
+    var b=document.createElement("button");b.type="button";b.className="kbtn"+(recId===id?" rec":"");
+    b.textContent=recId===id?"Tekan kombinasi\u2026":text;
+    b.onclick=function(){startRec(id)};
+    r.appendChild(sp);r.appendChild(b);box.appendChild(r);
+  }
+  KEYS.forEach(function(k){row(k.id,k.l,SC[k.id]?pretty(SC[k.id]):"Kosong")});
+  row("num","Pindah ke AI nomor 1\u20139",SC.num?pretty(SC.num)+" + 1\u20139":"Kosong");
+}
+function startRec(id){
+  recId=id;$("kmsg").textContent="";renderKeys();
+  if(document.activeElement&&document.activeElement.blur)document.activeElement.blur();
+}
+function stopRec(){recId=null;renderKeys()}
+
+// Mengembalikan nama pintasan lain yang sudah memakai kombinasi ini (atau "" kalau bebas).
+function keyTaken(c,except){
+  var i;
+  for(i=0;i<KEYS.length;i++)if(KEYS[i].id!==except&&SC[KEYS[i].id]===c)return KEYS[i].l;
+  var sc=splitCombo(c);
+  if(except!=="num"&&SC.num&&/^Digit[1-9]$/.test(sc.code)&&sc.mods===SC.num)return "Pindah ke AI nomor 1\u20139";
+  return "";
+}
+function handleRecord(e){
+  e.preventDefault();e.stopPropagation();
+  var m=$("kmsg");
+  if(e.code==="Escape"){stopRec();return}
+  var c=comboOf(e);
+  if(!c)return; // baru menekan tombol modifier, tunggu tombol utamanya
+  if(c==="Backspace"||c==="Delete"){SC[recId]="";saveKeys();m.textContent="";stopRec();return}
+  if(!hasMod(c)){m.textContent="Pintasan harus memakai Ctrl, Alt, atau Meta, misalnya Alt + P.";return}
+  var sc=splitCombo(c);
+  if(recId==="num"){
+    if(!/^Digit[1-9]$/.test(sc.code)){m.textContent="Untuk bagian ini tekan modifier + angka 1\u20139, misalnya Alt + 3.";return}
+    var n,clash="";
+    for(n=1;n<=9&&!clash;n++)clash=keyTaken(sc.mods+"+Digit"+n,"num");
+    if(clash){m.textContent="Bentrok dengan pintasan: "+clash+".";return}
+    SC.num=sc.mods;
+  }else{
+    var used=keyTaken(c,recId);
+    if(used){m.textContent="Sudah dipakai untuk: "+used+".";return}
+    if(SC.num&&/^Digit[1-9]$/.test(sc.code)&&sc.mods===SC.num){m.textContent="Bentrok dengan pintasan pindah AI nomor 1\u20139.";return}
+    SC[recId]=c;
+  }
+  saveKeys();m.textContent="";stopRec();
+}
+$("kreset").onclick=function(){SC=defKeys();saveKeys();$("kmsg").textContent="";recId=null;renderKeys()};
+
+function overlayOpen(){return !$("sheet").classList.contains("hide")||!$("pop").classList.contains("hide")}
+function goGroup(g){
+  var act=active&&g.filter(function(a){return a.id===active.id})[0];
+  select(act||g[0]);
+}
+function stepAI(d){
+  var gs=groupsOf();if(!gs.length)return;
+  var cur=-1;
+  gs.forEach(function(g,i){if(active&&g.some(function(a){return a.id===active.id}))cur=i});
+  var n=cur<0?(d>0?0:gs.length-1):(cur+d+gs.length)%gs.length;
+  select(gs[n][0]);
+}
+function runKey(id){
+  if(id==="atur"){if($("sheet").classList.contains("hide"))openSheet();else closeSheet();return}
+  if(overlayOpen())return; // saat pengaturan terbuka, pintasan lain dimatikan
+  if(id==="prompt")$("prm").onclick();
+  else if(id==="fold")$("fold").onclick();
+  else if(id==="search"){
+    if($("pside").classList.contains("hide"))setPSide(true);
+    try{$("psearch").focus();$("psearch").select()}catch(e){}
+  }
+  else if(id==="next")stepAI(1);
+  else if(id==="prev")stepAI(-1);
+  else if(id==="reload")$("reload").onclick();
+}
+document.addEventListener("keydown",function(e){
+  if(recId!==null){handleRecord(e);return}
+  if(e.repeat)return;
+  var c=comboOf(e);if(!c||!hasMod(c))return;
+  var i;
+  for(i=0;i<KEYS.length;i++){
+    if(SC[KEYS[i].id]&&SC[KEYS[i].id]===c){e.preventDefault();runKey(KEYS[i].id);return}
+  }
+  var sc=splitCombo(c);
+  if(SC.num&&/^Digit[1-9]$/.test(sc.code)&&sc.mods===SC.num){
+    e.preventDefault();
+    if(overlayOpen())return;
+    var g=groupsOf()[parseInt(sc.code.slice(5),10)-1];
+    if(g)goGroup(g);
+  }
+},true);
+renderKeys();
+
+// ---- Cadangan data: ekspor dan impor ----
+$("exp").onclick=function(){
+  var data={
+    app:"menuai",version:1,exported:new Date().toISOString(),
+    list:list,prompts:plist,look:look,
+    theme:document.documentElement.getAttribute("data-theme")||"auto",
+    keys:SC
+  };
+  var blob=new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="menu-ai-cadangan-"+new Date().toISOString().slice(0,10)+".json";
+  document.body.appendChild(a);a.click();
+  setTimeout(function(){URL.revokeObjectURL(a.href);a.remove()},1500);
+  toast("Data diekspor ke file .json");
+};
+$("imp").onclick=function(){$("impf").click()};
+$("impf").onchange=function(){
+  var f=this.files&&this.files[0];
+  this.value="";
+  if(!f)return;
+  var rd=new FileReader();
+  rd.onload=function(){
+    var d;
+    try{d=JSON.parse(rd.result)}catch(e){toast("File itu bukan cadangan yang valid.");return}
+    if(!d||d.app!=="menuai"){toast("File itu bukan cadangan Menu AI.");return}
+    var nl=Array.isArray(d.list)?d.list.filter(valid).map(fresh):null;
+    var np=Array.isArray(d.prompts)?cleanPrompts(d.prompts):null;
+    var parts=[];
+    if(nl)parts.push(nl.length+" AI");
+    if(np)parts.push(np.length+" prompt");
+    if(d.look)parts.push("tampilan");
+    if(d.keys)parts.push("pintasan");
+    if(!parts.length){toast("Tidak ada data yang bisa diimpor.");return}
+    if(!confirm("Impor cadangan ini?\n"+parts.join(", ")+" akan menggantikan data yang ada sekarang."))return;
+    if(nl){
+      Object.keys(views).forEach(closeView);
+      list=nl;save();active=null;cancelEdit();renderSheet();renderChips();
+    }
+    if(np){plist=np;savePrompts();pOpen=null;pFilter="all";pCancel();renderPrompts()}
+    if(d.look&&typeof d.look==="object"){
+      var lk={},L=d.look;
+      if(typeof L.title==="string")lk.title=L.title.slice(0,16);
+      if(HEX.test(L.bg||""))lk.bg=L.bg;
+      if(HEX.test(L.acc||""))lk.acc=L.acc;
+      if(typeof L.img==="string"&&/^data:image\/[a-z+.-]+;base64,[A-Za-z0-9+\/=]+$/.test(L.img))lk.img=L.img;
+      look=lk;saveLook();
+      $("lt").value=look.title||"";$("lb").value=look.bg||"#eceff7";$("la").value=look.acc||"#0e7c66";
+    }
+    if(d.theme==="light"||d.theme==="dark"||d.theme==="auto")setTheme(d.theme);
+    if(d.keys){SC=cleanKeys(d.keys);saveKeys();renderKeys()}
+    toast("Impor selesai.");
+  };
+  rd.readAsText(f);
+};
 
 // Ikuti perubahan ukuran area (putar layar, dll.)
 var lastD=null,rlTimer=null;
