@@ -66,9 +66,26 @@ const box = (a) => ({
 });
 
 // Item bertanda "menuai-profile:<id>" dapat penyimpanan login sendiri; lainnya berbagi satu.
+// PATCH: default sekarang unik per judul (nama AI), supaya tiap AI punya session sendiri.
 function partitionOf(title) {
   const m = /^menuai-profile:(.+)$/.exec(title || "");
-  return "persist:menuai_" + (m ? m[1].replace(/[^A-Za-z0-9_]/g, "_") : "shared");
+  return "persist:menuai_" + (m ? m[1] : (title || "shared")).replace(/[^A-Za-z0-9_]/g, "_");
+}
+
+// PATCH: samakan UA & Client Hints dengan Chrome asli, untuk webContents apa pun (termasuk popup).
+function applyChromeHeaders(wc) {
+  const chromeVer = process.versions.chrome.split(".")[0];
+  const ua = app.userAgentFallback;
+  wc.setUserAgent(ua);
+  wc.session.webRequest.onBeforeSendHeaders((details, cb) => {
+    const h = details.requestHeaders;
+    h["User-Agent"] = ua;
+    delete h["X-Requested-With"];
+    h["Sec-CH-UA"] = `"Chromium";v="${chromeVer}", "Google Chrome";v="${chromeVer}", "Not-A.Brand";v="99"`;
+    h["Sec-CH-UA-Mobile"] = "?0";
+    h["Sec-CH-UA-Platform"] = '"Windows"';
+    cb({ requestHeaders: h });
+  });
 }
 
 const ops = {
@@ -78,7 +95,22 @@ const ops = {
     views.set(id, v);
     v.setBounds(box(a));
     win.contentView.addChildView(v);
-    v.webContents.setWindowOpenHandler(() => ({ action: "allow", overrideBrowserWindowOptions: { autoHideMenuBar: true } }));
+
+    // PATCH: pasang UA & Client Hints Chrome asli
+    applyChromeHeaders(v.webContents);
+
+    // PATCH: popup (mis. login Google) juga harus pakai UA & header yang sama
+    v.webContents.setWindowOpenHandler(() => ({
+      action: "allow",
+      overrideBrowserWindowOptions: {
+        autoHideMenuBar: true,
+        webPreferences: { partition: partitionOf(a.title), contextIsolation: true },
+      },
+    }));
+    v.webContents.session.on("will-create-web-contents", (e, wc) => {
+      applyChromeHeaders(wc);
+    });
+
     // Tombol yang ditekan di dalam jendela AI tidak sampai ke index.html, jadi pintasan yang
     // terdaftar dicegat di sini lalu diteruskan ke menu aplikasi.
     v.webContents.on("before-input-event", (event, input) => {
